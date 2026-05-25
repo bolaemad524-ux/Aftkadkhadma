@@ -63,9 +63,13 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* تأثيرات النجوم */
+        .star-rating i { cursor: pointer; transition: color 0.2s; }
+        .star-rating i.active { color: #f59e0b; } /* لون ذهبي للنجوم النشطة */
     </style>
 </head>
-<body class="text-gray-800 antialiased flex flex-col overflow-hidden">
+<body class="text-gray-800 antialiased flex flex-col overflow-hidden relative">
 
     <div id="loginScreen" class="fixed inset-0 bg-primary bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] flex items-center justify-center z-50 p-4 transition-opacity duration-300">
         <div class="bg-white p-6 md:p-8 rounded-3xl shadow-2xl w-full max-w-2xl text-center border-t-8 border-secondary overflow-y-auto max-h-[95dvh] custom-scrollbar relative transition-all duration-300">
@@ -118,6 +122,41 @@
         </div>
     </div>
 
+    <div id="ratingScreen" class="fixed inset-0 bg-gray-50 flex items-center justify-center z-50 p-4 hide overflow-y-auto">
+        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-xl w-full max-w-md text-center border-t-8 border-yellow-400 my-auto">
+            <div class="bg-yellow-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-sm">
+                <i class="fa-solid fa-star text-4xl text-yellow-500"></i>
+            </div>
+            <h1 class="text-2xl font-black mb-2 text-gray-800">تقييم الخدمة</h1>
+            <p id="ratingMeetingName" class="text-sm font-bold text-gray-500 mb-6">كنيسة العذراء مريم بالسويس</p>
+            
+            <div class="mb-6">
+                <label class="block text-lg font-bold text-gray-700 mb-3">ما هو تقييمك العام؟</label>
+                <div class="flex justify-center gap-2 text-3xl text-gray-300 star-rating" dir="ltr">
+                    <i class="fa-solid fa-star" onclick="window.setRating(1)"></i>
+                    <i class="fa-solid fa-star" onclick="window.setRating(2)"></i>
+                    <i class="fa-solid fa-star" onclick="window.setRating(3)"></i>
+                    <i class="fa-solid fa-star" onclick="window.setRating(4)"></i>
+                    <i class="fa-solid fa-star" onclick="window.setRating(5)"></i>
+                </div>
+            </div>
+
+            <div class="mb-6 text-right">
+                <label class="block text-sm font-bold text-gray-700 mb-2">اسمك (اختياري)</label>
+                <input type="text" id="feedbackName" placeholder="اكتب اسمك هنا..." class="w-full p-3 border-2 rounded-xl outline-none bg-gray-50 font-bold focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100 transition">
+            </div>
+
+            <div class="mb-6 text-right">
+                <label class="block text-sm font-bold text-gray-700 mb-2">مقترحاتك أو رسالتك لتطوير الخدمة</label>
+                <textarea id="feedbackText" rows="4" placeholder="يسعدنا سماع رأيك..." class="w-full p-3 border-2 rounded-xl outline-none resize-none bg-gray-50 font-bold focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100 transition"></textarea>
+            </div>
+
+            <button onclick="window.submitFeedback()" id="btnSubmitFeedback" class="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white font-black py-4 rounded-xl shadow-lg transition transform hover:-translate-y-1 text-lg">
+                إرسال التقييم <i class="fa-solid fa-paper-plane ml-2"></i>
+            </button>
+        </div>
+    </div>
+
     <div id="appContainer" class="hide h-full w-full flex flex-col md:flex-row opacity-0 transition-opacity duration-500">
         
         <header id="mobileHeader" class="md:hidden bg-primary text-white p-4 shadow-md flex justify-center items-center z-10 shrink-0 transition-colors duration-300">
@@ -142,7 +181,7 @@
                     <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
                         <div class="flex items-center justify-center gap-2 bg-green-50 px-4 py-2 rounded-xl border border-green-200 w-full sm:w-auto shadow-sm">
                             <i class="fa-solid fa-users text-green-600 text-xl"></i>
-                            <span class="text-sm font-bold text-green-800">إجمالي الحضور اليوم:</span>
+                            <span class="text-sm font-bold text-green-800">إجمالي الحضور:</span>
                             <span id="attendanceCountDisplay" class="text-xl font-black text-green-700 w-8 text-center bg-white rounded-md border border-green-200">0</span>
                         </div>
 
@@ -160,7 +199,7 @@
                                class="w-full pr-14 pl-4 py-4 rounded-2xl border-2 border-gray-100 outline-none bg-white shadow-sm transition font-semibold focus:ring-4 dynamic-theme-border">
                     </div>
                     <button onclick="window.openModal('addMakhdoomModal')" class="text-white px-8 py-4 rounded-2xl font-black shadow-lg transition transform hover:-translate-y-1 flex items-center justify-center whitespace-nowrap text-lg dynamic-theme-btn">
-                        <i class="fa-solid fa-user-plus ml-2 text-xl"></i> إضافة مخدوم جديد
+                        <i class="fa-solid fa-user-plus ml-2 text-xl"></i> إضافة مخدوم
                     </button>
                 </div>
 
@@ -187,8 +226,7 @@
                                     <th class="py-4 px-6 font-bold text-center">إجراءات</th>
                                 </tr>
                             </thead>
-                            <tbody id="makhdoomsList" class="divide-y divide-gray-100">
-                                </tbody>
+                            <tbody id="makhdoomsList" class="divide-y divide-gray-100"></tbody>
                         </table>
                     </div>
                     <div id="emptyState" class="hide p-12 text-center">
@@ -211,15 +249,42 @@
                         <p class="text-gray-500 text-sm font-semibold mt-1">المخدومين الذين يوافق عيد ميلادهم خلال الـ 3 شهور الماضية وحتى اليوم.</p>
                     </div>
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" id="birthdaysList">
-                </div>
-                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" id="birthdaysList"></div>
                 <div id="emptyBirthdays" class="hide bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center mb-8">
                     <div class="bg-gray-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fa-solid fa-face-frown-open text-4xl text-gray-300"></i>
                     </div>
                     <h3 class="text-xl font-bold text-gray-500">لا توجد أعياد ميلاد!</h3>
+                </div>
+            </div>
+
+            <div id="tab-ratings" class="tab-content hide max-w-6xl mx-auto">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-yellow-200 mb-6 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-yellow-50 w-14 h-14 rounded-2xl flex items-center justify-center text-yellow-500">
+                            <i class="fa-solid fa-star text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-black text-gray-800">تقييمات ومقترحات المخدومين</h2>
+                            <p class="text-gray-500 text-sm font-semibold mt-1">تتبع آراء الخدام لتطوير مستوى الخدمة.</p>
+                        </div>
+                    </div>
+                    <div class="bg-yellow-100 px-6 py-3 rounded-xl border border-yellow-300 text-center">
+                        <div class="text-sm font-bold text-yellow-700">متوسط التقييم</div>
+                        <div class="text-2xl font-black text-yellow-600 flex items-center justify-center gap-1">
+                            <span id="avgRatingDisplay">0.0</span> <i class="fa-solid fa-star text-lg"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" id="ratingsList"></div>
+                
+                <div id="emptyRatings" class="hide bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center mb-8">
+                    <div class="bg-gray-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid fa-comment-dots text-4xl text-gray-300"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-500">لا توجد تقييمات بعد</h3>
+                    <p class="text-gray-400 mt-2">ستظهر التقييمات هنا بمجرد أن يقوم المخدومون بإرسالها.</p>
                 </div>
             </div>
 
@@ -235,13 +300,13 @@
                 </div>
 
                 <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6">
-                    
                     <div class="bg-blue-50 border border-blue-200 p-5 rounded-2xl flex gap-3 text-primary">
                         <i class="fa-solid fa-lightbulb text-2xl text-yellow-500 mt-1"></i>
                         <div>
-                            <h4 class="font-black mb-1">ميزة تخصيص الأسماء</h4>
+                            <h4 class="font-black mb-1">ميزة التقييمات وتخصيص الأسماء</h4>
                             <p class="text-sm font-bold opacity-90 leading-relaxed">
-                                لكي تظهر رسالتك باسم المخدوم، يمكنك كتابة <strong>[الاسم]</strong> في أي مكان داخل رسالتك.
+                                - سيتم إرفاق رابط التقييم الخاص بالخدمة تلقائياً في نهاية أي رسالة واتساب يتم إرسالها.<br>
+                                - استخدم <strong>[الاسم]</strong> في نصوص الرسائل لتبديلها باسم المخدوم.
                             </p>
                         </div>
                     </div>
@@ -256,7 +321,7 @@
                         <h3 class="text-xl font-black text-gray-800 mb-2 flex items-center gap-2">
                             <i class="fa-solid fa-database text-primary dynamic-theme-text"></i> النسخة الاحتياطية والاسترداد
                         </h3>
-                        <p class="text-sm text-gray-600 mb-5 font-bold">يمكنك تحميل جميع بيانات الاجتماع (خدام، حضور، إعدادات) كملف للاحتفاظ بها، أو رفع ملف لاسترداد البيانات.</p>
+                        <p class="text-sm text-gray-600 mb-5 font-bold">حمل جميع بيانات الاجتماع كملف للاحتفاظ بها، أو ارفع ملف لاستردادها.</p>
                         <div class="flex flex-col md:flex-row gap-4">
                             <button onclick="window.exportData()" class="flex-1 text-white px-6 py-3 rounded-xl font-bold transition shadow-md flex items-center justify-center gap-2 dynamic-theme-btn-main">
                                 <i class="fa-solid fa-download"></i> تحميل نسخة احتياطية
@@ -269,21 +334,19 @@
                     </div>
 
                     <hr class="border-gray-100">
-
                     <div class="bg-yellow-50/50 p-6 rounded-2xl border border-yellow-200 shadow-sm relative">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
                             <label class="block text-gray-800 font-black text-lg">
                                 <i class="fa-solid fa-bullhorn text-yellow-500 ml-2 text-xl"></i> رسالة عامة للجميع (إعلان):
                             </label>
                             <button onclick="window.openWhatsAppModal('all')" class="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white px-6 py-2.5 rounded-xl font-bold transition flex items-center shadow-md w-full md:w-auto justify-center whitespace-nowrap">
-                                <i class="fa-solid fa-paper-plane ml-2"></i> إرسال لجميع المخدومين
+                                <i class="fa-solid fa-paper-plane ml-2"></i> إرسال للجميع
                             </button>
                         </div>
-                        <textarea id="msgGeneral" rows="3" placeholder="اكتب هنا إعلان أو رسالة عامة لإرسالها للجميع..." class="w-full p-4 border-2 rounded-xl outline-none resize-none bg-white font-semibold focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100 transition shadow-inner"></textarea>
+                        <textarea id="msgGeneral" rows="3" placeholder="اكتب هنا إعلان أو رسالة عامة..." class="w-full p-4 border-2 rounded-xl outline-none resize-none bg-white font-semibold focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100 transition shadow-inner"></textarea>
                     </div>
                     
                     <hr class="border-gray-100">
-
                     <div>
                         <label class="block text-gray-700 font-bold mb-2 text-lg"><i class="fa-solid fa-check-circle text-green-500 ml-2"></i> رسالة الحضور:</label>
                         <textarea id="msgPresent" rows="3" class="w-full p-4 border-2 rounded-xl outline-none resize-none bg-gray-50 font-semibold dynamic-theme-border focus:ring-2"></textarea>
@@ -312,23 +375,27 @@
                 </div>
                 <h2 id="appTitleDesktop" class="text-xs font-black dynamic-theme-text mt-2 leading-tight"></h2>
             </div>
-            <nav class="flex flex-row md:flex-col w-full h-full justify-between md:justify-start gap-1 md:gap-6">
-                <button onclick="window.switchTab('attendance')" id="nav-attendance" class="nav-square active flex flex-col items-center justify-center flex-1 md:flex-none md:w-full h-full md:h-24 rounded-xl md:rounded-2xl text-gray-400 font-bold">
-                    <i class="fa-solid fa-clipboard-user text-xl md:text-3xl mb-1"></i>
-                    <span class="text-[10px] md:text-sm">الحضور</span>
+            <nav class="flex flex-row md:flex-col w-full h-full justify-between md:justify-start gap-1 md:gap-4 overflow-x-auto custom-scrollbar pb-1 md:pb-0">
+                <button onclick="window.switchTab('attendance')" id="nav-attendance" class="nav-square active flex flex-col items-center justify-center flex-1 min-w-[70px] md:flex-none md:w-full h-full md:h-20 rounded-xl md:rounded-2xl text-gray-400 font-bold transition">
+                    <i class="fa-solid fa-clipboard-user text-xl md:text-2xl mb-1"></i>
+                    <span class="text-[10px] md:text-xs">الحضور</span>
                 </button>
-                <button onclick="window.switchTab('birthdays')" id="nav-birthdays" class="nav-square flex flex-col items-center justify-center flex-1 md:flex-none md:w-full h-full md:h-24 rounded-xl md:rounded-2xl text-gray-400 font-bold">
-                    <i class="fa-solid fa-cake-candles text-xl md:text-3xl mb-1"></i>
-                    <span class="text-[10px] md:text-sm">الميلاد</span>
+                <button onclick="window.switchTab('birthdays')" id="nav-birthdays" class="nav-square flex flex-col items-center justify-center flex-1 min-w-[70px] md:flex-none md:w-full h-full md:h-20 rounded-xl md:rounded-2xl text-gray-400 font-bold transition">
+                    <i class="fa-solid fa-cake-candles text-xl md:text-2xl mb-1"></i>
+                    <span class="text-[10px] md:text-xs">الميلاد</span>
                 </button>
-                <button onclick="window.switchTab('settings')" id="nav-settings" class="nav-square flex flex-col items-center justify-center flex-1 md:flex-none md:w-full h-full md:h-24 rounded-xl md:rounded-2xl text-gray-400 font-bold">
-                    <i class="fa-solid fa-gear text-xl md:text-3xl mb-1"></i>
-                    <span class="text-[10px] md:text-sm">الإعدادات</span>
+                <button onclick="window.switchTab('ratings')" id="nav-ratings" class="nav-square flex flex-col items-center justify-center flex-1 min-w-[70px] md:flex-none md:w-full h-full md:h-20 rounded-xl md:rounded-2xl text-gray-400 font-bold transition">
+                    <i class="fa-solid fa-star text-xl md:text-2xl mb-1"></i>
+                    <span class="text-[10px] md:text-xs">التقييمات</span>
                 </button>
-                <div class="md:mt-auto md:w-full md:pt-6 md:border-t flex-1 md:flex-none h-full md:h-auto flex">
-                    <button onclick="window.logout()" class="nav-square flex flex-col items-center justify-center w-full h-full md:h-24 rounded-xl md:rounded-2xl text-red-400 hover:text-red-600 hover:bg-red-50 font-bold">
-                        <i class="fa-solid fa-right-from-bracket text-xl md:text-3xl mb-1"></i>
-                        <span class="text-[10px] md:text-sm">خروج</span>
+                <button onclick="window.switchTab('settings')" id="nav-settings" class="nav-square flex flex-col items-center justify-center flex-1 min-w-[70px] md:flex-none md:w-full h-full md:h-20 rounded-xl md:rounded-2xl text-gray-400 font-bold transition">
+                    <i class="fa-solid fa-gear text-xl md:text-2xl mb-1"></i>
+                    <span class="text-[10px] md:text-xs">الإعدادات</span>
+                </button>
+                <div class="md:mt-auto md:w-full md:pt-4 md:border-t flex-1 min-w-[70px] md:flex-none h-full md:h-auto flex">
+                    <button onclick="window.logout()" class="nav-square flex flex-col items-center justify-center w-full h-full md:h-20 rounded-xl md:rounded-2xl text-red-400 hover:text-red-600 hover:bg-red-50 font-bold transition">
+                        <i class="fa-solid fa-right-from-bracket text-xl md:text-2xl mb-1"></i>
+                        <span class="text-[10px] md:text-xs">خروج</span>
                     </button>
                 </div>
             </nav>
@@ -433,9 +500,6 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ==========================================
-        // بيانات قاعدة البيانات الخاصة بك
-        // ==========================================
         const myFirebaseConfig = {
             apiKey: "AIzaSyB7rBcDrP8LO11T8nQ1_ziXrLAVdY8aJ2Q",
             authDomain: "aftkad-55930.firebaseapp.com",
@@ -444,7 +508,6 @@
             messagingSenderId: "1410295757",
             appId: "1:1410295757:web:15539e8f271e51fca60684"
         };
-        // ==========================================
 
         const app = initializeApp(myFirebaseConfig);
         const auth = getAuth(app);
@@ -452,9 +515,7 @@
         
         signInAnonymously(auth);
 
-        function getCollectionPath(colName) {
-            return collection(dbFirestore, colName);
-        }
+        function getCollectionPath(colName) { return collection(dbFirestore, colName); }
 
         const MEETINGS = {
             'alumni': { id: 'alumni', title: 'اجتماع الخريجيين', password: '2846', icon: 'fa-graduation-cap', color: '#1e3a8a', gradient: 'from-primary to-secondary', navActive: 'active' },
@@ -464,30 +525,110 @@
         let currentMeetingId = null;
         let currentEditMakhdoomId = null; 
         let userId = null;
+        
         let unsubscribeMakhdooms = null;
         let unsubscribeAttendance = null;
         let unsubscribeSettings = null;
+        let unsubscribeRatings = null;
 
         let db = {
             makhdooms: [], 
             attendance: {}, 
+            ratings: [], // لتخزين التقييمات
             settings: { present: '', absent: '', birthday: '', general: '', senderPhone: '' }
         };
 
         document.getElementById('meetingDate').value = new Date().toISOString().split('T')[0];
 
+        // --- نظام اكتشاف رابط التقييم ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const rateMeetingId = urlParams.get('rate');
+        
+        // المتغير لتسجيل النجوم في واجهة التقييم
+        let currentStarRating = 0;
+
+        window.setRating = (stars) => {
+            currentStarRating = stars;
+            const starIcons = document.querySelectorAll('.star-rating i');
+            starIcons.forEach((icon, index) => {
+                if(index < stars) {
+                    icon.classList.add('active');
+                    icon.classList.replace('text-gray-300', 'text-yellow-400');
+                } else {
+                    icon.classList.remove('active');
+                    icon.classList.replace('text-yellow-400', 'text-gray-300');
+                }
+            });
+        };
+
+        window.submitFeedback = async () => {
+            if(currentStarRating === 0) {
+                Swal.fire('تنبيه', 'برجاء اختيار عدد النجوم للتقييم', 'warning');
+                return;
+            }
+            
+            const btn = document.getElementById('btnSubmitFeedback');
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الإرسال...`;
+            btn.disabled = true;
+
+            const name = document.getElementById('feedbackName').value.trim() || 'فاعل خير (غير معروف)';
+            const text = document.getElementById('feedbackText').value.trim();
+            
+            const ratingData = {
+                id: 'r_' + Date.now(),
+                stars: currentStarRating,
+                name: name,
+                text: text,
+                date: new Date().toISOString().split('T')[0],
+                timestamp: Date.now()
+            };
+
+            try {
+                // حفظ التقييم في فايربيز (حتى والمستخدم مجهول)
+                await setDoc(doc(getCollectionPath(`ratings_${rateMeetingId}`), ratingData.id), ratingData);
+                
+                Swal.fire({
+                    title: 'شكراً لك!',
+                    text: 'تم إرسال تقييمك بنجاح، رأيك يهمنا جداً.',
+                    icon: 'success',
+                    confirmButtonText: 'إغلاق',
+                    confirmButtonColor: '#eab308'
+                }).then(() => {
+                    // تفريغ الفورم بعد الإرسال
+                    document.getElementById('feedbackName').value = '';
+                    document.getElementById('feedbackText').value = '';
+                    window.setRating(0);
+                });
+            } catch(e) {
+                Swal.fire('خطأ', 'حدث خطأ أثناء الإرسال، برجاء المحاولة لاحقاً', 'error');
+            } finally {
+                btn.innerHTML = `إرسال التقييم <i class="fa-solid fa-paper-plane ml-2"></i>`;
+                btn.disabled = false;
+            }
+        };
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 userId = user.uid;
-                const savedMeeting = sessionStorage.getItem('current_meeting');
-                const isLoggedIn = sessionStorage.getItem('logged_in');
-                if (isLoggedIn === 'true' && savedMeeting && MEETINGS[savedMeeting]) {
-                    currentMeetingId = savedMeeting;
-                    applyTheme();
-                    subscribeToData(currentMeetingId);
-                    showApp();
+                
+                // إذا كان الرابط هو رابط تقييم
+                if (rateMeetingId && MEETINGS[rateMeetingId]) {
+                    document.getElementById('loginScreen').classList.add('hide');
+                    document.getElementById('appContainer').classList.add('hide');
+                    document.getElementById('ratingScreen').classList.remove('hide');
+                    document.getElementById('ratingMeetingName').innerText = MEETINGS[rateMeetingId].title;
                 } else {
-                    document.getElementById('loginScreen').classList.remove('hide');
+                    // نظام تسجيل الدخول العادي للأدمن
+                    const savedMeeting = sessionStorage.getItem('current_meeting');
+                    const isLoggedIn = sessionStorage.getItem('logged_in');
+                    if (isLoggedIn === 'true' && savedMeeting && MEETINGS[savedMeeting]) {
+                        currentMeetingId = savedMeeting;
+                        applyTheme();
+                        subscribeToData(currentMeetingId);
+                        showApp();
+                    } else {
+                        document.getElementById('loginScreen').classList.remove('hide');
+                    }
                 }
             }
         });
@@ -498,6 +639,7 @@
             if (unsubscribeMakhdooms) unsubscribeMakhdooms();
             if (unsubscribeAttendance) unsubscribeAttendance();
             if (unsubscribeSettings) unsubscribeSettings();
+            if (unsubscribeRatings) unsubscribeRatings();
 
             unsubscribeMakhdooms = onSnapshot(getCollectionPath(`makhdooms_${meetingId}`), (snapshot) => {
                 db.makhdooms = [];
@@ -517,11 +659,19 @@
                 }
                 if (!document.getElementById('tab-settings').classList.contains('hide')) loadSettings();
             }, (err) => console.error(err));
+
+            // الاشتراك لسحب التقييمات
+            unsubscribeRatings = onSnapshot(getCollectionPath(`ratings_${meetingId}`), (snapshot) => {
+                db.ratings = [];
+                snapshot.forEach((doc) => db.ratings.push(doc.data()));
+                if (!document.getElementById('tab-ratings').classList.contains('hide')) window.renderRatingsList();
+            }, (err) => console.error(err));
         }
 
         function refreshCurrentTab() {
             if (!document.getElementById('tab-attendance').classList.contains('hide')) window.renderAttendanceList();
             if (!document.getElementById('tab-birthdays').classList.contains('hide')) window.renderBirthdays();
+            if (!document.getElementById('tab-ratings').classList.contains('hide')) window.renderRatingsList();
         }
 
         window.selectMeeting = (meetingId) => {
@@ -567,6 +717,7 @@
             if (unsubscribeMakhdooms) unsubscribeMakhdooms();
             if (unsubscribeAttendance) unsubscribeAttendance();
             if (unsubscribeSettings) unsubscribeSettings();
+            if (unsubscribeRatings) unsubscribeRatings();
 
             document.getElementById('appContainer').classList.remove('opacity-100');
             setTimeout(() => {
@@ -642,7 +793,7 @@
             const name = document.getElementById('newMakhdoomName').value.trim();
             const phone = document.getElementById('newMakhdoomPhone').value.trim();
             const dob = document.getElementById('newMakhdoomDob').value;
-            const address = document.getElementById('newMakhdoomAddress').value.trim(); // قراءة العنوان
+            const address = document.getElementById('newMakhdoomAddress').value.trim();
             const markPresent = document.getElementById('markPresentNow').checked;
 
             if (!name || !phone) {
@@ -655,7 +806,6 @@
             btn.disabled = true;
 
             const newId = 'm_' + Date.now();
-            // حفظ العنوان مع البيانات
             const newData = { id: newId, name: name, phone: phone, dob: dob, address: address };
 
             try {
@@ -690,7 +840,7 @@
                 document.getElementById('editMakhdoomName').value = makhdoom.name;
                 document.getElementById('editMakhdoomPhone').value = makhdoom.phone;
                 document.getElementById('editMakhdoomDob').value = makhdoom.dob || '';
-                document.getElementById('editMakhdoomAddress').value = makhdoom.address || ''; // وضع العنوان
+                document.getElementById('editMakhdoomAddress').value = makhdoom.address || ''; 
                 window.openModal('editMakhdoomModal');
             }
         };
@@ -699,7 +849,7 @@
             const name = document.getElementById('editMakhdoomName').value.trim();
             const phone = document.getElementById('editMakhdoomPhone').value.trim();
             const dob = document.getElementById('editMakhdoomDob').value;
-            const address = document.getElementById('editMakhdoomAddress').value.trim(); // قراءة العنوان المعدل
+            const address = document.getElementById('editMakhdoomAddress').value.trim();
 
             if (!name || !phone) {
                 Swal.fire('بيانات ناقصة', 'الرجاء إدخال اسم المخدوم ورقم الواتساب', 'warning');
@@ -786,12 +936,12 @@
             }
         };
 
-        // --- دالة تحميل النسخة الاحتياطية (Export) ---
         window.exportData = () => {
             const dataToExport = {
                 makhdooms: db.makhdooms,
                 attendance: db.attendance,
-                settings: db.settings
+                settings: db.settings,
+                ratings: db.ratings // تضمين التقييمات في النسخة الاحتياطية
             };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport));
             const downloadAnchorNode = document.createElement('a');
@@ -802,7 +952,6 @@
             downloadAnchorNode.remove();
         };
 
-        // --- دالة استرداد البيانات (Import) ---
         window.importData = (event) => {
             const file = event.target.files[0];
             if (!file) return;
@@ -836,6 +985,12 @@
 
                             for (let date in importedData.attendance) {
                                 await setDoc(doc(getCollectionPath(`attendance_${currentMeetingId}`), date), { presentIds: importedData.attendance[date] });
+                            }
+                            
+                            if(importedData.ratings) {
+                                for (let r of importedData.ratings) {
+                                    await setDoc(doc(getCollectionPath(`ratings_${currentMeetingId}`), r.id), r);
+                                }
                             }
 
                             Swal.fire('تم الاسترداد', 'تم استعادة البيانات بنجاح', 'success');
@@ -893,7 +1048,6 @@
                     let count = 0;
                     for (let d in db.attendance) if (db.attendance[d].includes(m.id)) count++;
                     
-                    // إظهار العنوان تحت الاسم إذا كان موجوداً
                     const addressHtml = m.address ? `<div class="text-sm text-gray-500 font-semibold mt-1"><i class="fa-solid fa-location-dot ml-1 text-gray-400"></i>${m.address}</div>` : '';
 
                     const row = document.createElement('tr');
@@ -1003,6 +1157,60 @@
             }
         };
 
+        // --- عرض قائمة التقييمات ---
+        window.renderRatingsList = () => {
+            const list = document.getElementById('ratingsList');
+            const emptyState = document.getElementById('emptyRatings');
+            const avgDisplay = document.getElementById('avgRatingDisplay');
+            
+            list.innerHTML = '';
+            
+            if (!db.ratings || db.ratings.length === 0) {
+                emptyState.classList.remove('hide');
+                list.classList.add('hide');
+                avgDisplay.innerText = "0.0";
+            } else {
+                emptyState.classList.add('hide');
+                list.classList.remove('hide');
+                
+                // حساب المتوسط
+                let totalStars = 0;
+                db.ratings.forEach(r => totalStars += r.stars);
+                const avg = (totalStars / db.ratings.length).toFixed(1);
+                avgDisplay.innerText = avg;
+
+                // ترتيب من الأحدث للأقدم
+                const sortedRatings = [...db.ratings].sort((a, b) => b.timestamp - a.timestamp);
+
+                sortedRatings.forEach(r => {
+                    let starsHtml = '';
+                    for(let i=1; i<=5; i++) {
+                        starsHtml += `<i class="fa-solid fa-star ${i <= r.stars ? 'text-yellow-400' : 'text-gray-200'} text-lg"></i>`;
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = 'bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col hover:shadow-md transition';
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-4 border-b border-gray-50 pb-4">
+                            <div>
+                                <h3 class="font-black text-lg text-gray-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-user-circle text-gray-300"></i> ${r.name}
+                                </h3>
+                                <p class="text-xs font-bold text-gray-400 mt-1">${r.date}</p>
+                            </div>
+                            <div class="flex" dir="ltr">
+                                ${starsHtml}
+                            </div>
+                        </div>
+                        <p class="text-gray-700 font-semibold leading-relaxed whitespace-pre-line flex-1">
+                            ${r.text || '<span class="text-gray-400 italic">بدون تعليق نصي</span>'}
+                        </p>
+                    `;
+                    list.appendChild(card);
+                });
+            }
+        };
+
         window.openWhatsAppModal = (type) => {
             const date = document.getElementById('meetingDate').value;
             const presentIds = db.attendance[date] || [];
@@ -1046,7 +1254,18 @@
         window.prepareAndSendWhatsApp = (phone, msgType, fullName) => {
             let firstName = fullName.trim().split(' ')[0];
             let template = db.settings[msgType] || '';
+            
+            // 1. استبدال الاسم
             let finalMsg = template.includes('[الاسم]') ? template.replace(/\[الاسم\]/g, firstName) : `أزيك يا ${firstName}،\n${template}`;
+            
+            // 2. إضافة رابط التقييم في نهاية أي رسالة
+            const appUrl = window.location.origin + window.location.pathname;
+            const feedbackLink = `${appUrl}?rate=${currentMeetingId}`;
+            const ratingSuffix = `\n\nمتنساش تقيم خدمتنا ولو عندك افكار شاركها معانا لتطوير الخدمه من خلال الرابط ده:\n${feedbackLink}`;
+            
+            finalMsg += ratingSuffix;
+
+            // 3. تنسيق الرقم وفتح الواتساب
             let p = phone.trim().replace(/\D/g, ''); 
             if (p.startsWith('01')) p = '20' + p; 
             window.open(`https://wa.me/${p}?text=${encodeURIComponent(finalMsg)}`, '_blank');
