@@ -252,6 +252,23 @@
                     </div>
 
                     <hr class="border-gray-100">
+                    <div class="bg-gray-50 p-6 rounded-2xl border border-gray-200">
+                        <h3 class="text-xl font-black text-gray-800 mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-database text-primary dynamic-theme-text"></i> النسخة الاحتياطية والاسترداد
+                        </h3>
+                        <p class="text-sm text-gray-600 mb-5 font-bold">يمكنك تحميل جميع بيانات الاجتماع (خدام، حضور، إعدادات) كملف للاحتفاظ بها، أو رفع ملف لاسترداد البيانات.</p>
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <button onclick="window.exportData()" class="flex-1 text-white px-6 py-3 rounded-xl font-bold transition shadow-md flex items-center justify-center gap-2 dynamic-theme-btn-main">
+                                <i class="fa-solid fa-download"></i> تحميل نسخة احتياطية
+                            </button>
+                            <label class="flex-1 bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-100 px-6 py-3 rounded-xl font-bold transition shadow-sm flex items-center justify-center gap-2 cursor-pointer">
+                                <i class="fa-solid fa-upload"></i> استرداد بيانات
+                                <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="window.importData(event)">
+                            </label>
+                        </div>
+                    </div>
+
+                    <hr class="border-gray-100">
 
                     <div class="bg-yellow-50/50 p-6 rounded-2xl border border-yellow-200 shadow-sm relative">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
@@ -337,6 +354,10 @@
                     <label class="block text-sm font-bold text-gray-700 mb-2">تاريخ الميلاد (اختياري)</label>
                     <input type="date" id="newMakhdoomDob" class="w-full p-4 border-2 rounded-xl outline-none bg-gray-50 text-right font-bold dynamic-theme-border focus:ring-2">
                 </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">العنوان (اختياري)</label>
+                    <input type="text" id="newMakhdoomAddress" placeholder="مثال: السويس، حي الأربعين..." class="w-full p-4 border-2 rounded-xl outline-none bg-gray-50 font-bold dynamic-theme-border focus:ring-2">
+                </div>
                 <div class="flex items-center mt-2 bg-green-50 p-4 rounded-xl border border-green-200">
                     <input type="checkbox" id="markPresentNow" checked class="w-6 h-6 text-green-600 rounded border-gray-300 cursor-pointer accent-accent">
                     <label for="markPresentNow" class="mr-3 text-green-800 font-bold cursor-pointer">تسجيله كحاضر في اجتماع اليوم فوراً</label>
@@ -366,6 +387,10 @@
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">تاريخ الميلاد (اختياري)</label>
                     <input type="date" id="editMakhdoomDob" class="w-full p-4 border-2 rounded-xl outline-none bg-gray-50 text-right font-bold dynamic-theme-border focus:ring-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">العنوان (اختياري)</label>
+                    <input type="text" id="editMakhdoomAddress" class="w-full p-4 border-2 rounded-xl outline-none bg-gray-50 font-bold dynamic-theme-border focus:ring-2">
                 </div>
                 <button onclick="window.saveEditMakhdoom()" id="btnSaveEdit" class="w-full text-white py-4 rounded-xl font-black shadow-lg transition mt-4 text-lg dynamic-theme-btn-main flex justify-center items-center gap-2">
                     تحديث البيانات
@@ -409,7 +434,7 @@
         import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ==========================================
-        // بيانات قاعدة البيانات الخاصة بك (مربوطة رسمياً)
+        // بيانات قاعدة البيانات الخاصة بك
         // ==========================================
         const myFirebaseConfig = {
             apiKey: "AIzaSyB7rBcDrP8LO11T8nQ1_ziXrLAVdY8aJ2Q",
@@ -617,6 +642,7 @@
             const name = document.getElementById('newMakhdoomName').value.trim();
             const phone = document.getElementById('newMakhdoomPhone').value.trim();
             const dob = document.getElementById('newMakhdoomDob').value;
+            const address = document.getElementById('newMakhdoomAddress').value.trim(); // قراءة العنوان
             const markPresent = document.getElementById('markPresentNow').checked;
 
             if (!name || !phone) {
@@ -629,7 +655,8 @@
             btn.disabled = true;
 
             const newId = 'm_' + Date.now();
-            const newData = { id: newId, name: name, phone: phone, dob: dob };
+            // حفظ العنوان مع البيانات
+            const newData = { id: newId, name: name, phone: phone, dob: dob, address: address };
 
             try {
                 await setDoc(doc(getCollectionPath(`makhdooms_${currentMeetingId}`), newId), newData);
@@ -645,6 +672,7 @@
                 document.getElementById('newMakhdoomName').value = '';
                 document.getElementById('newMakhdoomPhone').value = '';
                 document.getElementById('newMakhdoomDob').value = '';
+                document.getElementById('newMakhdoomAddress').value = '';
                 
                 Swal.fire({ title: 'عملية ناجحة', text: 'تمت إضافة المخدوم للسحابة بنجاح', icon: 'success', timer: 1500, showConfirmButton: false });
             } catch(e) {
@@ -662,6 +690,7 @@
                 document.getElementById('editMakhdoomName').value = makhdoom.name;
                 document.getElementById('editMakhdoomPhone').value = makhdoom.phone;
                 document.getElementById('editMakhdoomDob').value = makhdoom.dob || '';
+                document.getElementById('editMakhdoomAddress').value = makhdoom.address || ''; // وضع العنوان
                 window.openModal('editMakhdoomModal');
             }
         };
@@ -670,6 +699,7 @@
             const name = document.getElementById('editMakhdoomName').value.trim();
             const phone = document.getElementById('editMakhdoomPhone').value.trim();
             const dob = document.getElementById('editMakhdoomDob').value;
+            const address = document.getElementById('editMakhdoomAddress').value.trim(); // قراءة العنوان المعدل
 
             if (!name || !phone) {
                 Swal.fire('بيانات ناقصة', 'الرجاء إدخال اسم المخدوم ورقم الواتساب', 'warning');
@@ -682,7 +712,7 @@
 
             try {
                 await setDoc(doc(getCollectionPath(`makhdooms_${currentMeetingId}`), currentEditMakhdoomId), {
-                    id: currentEditMakhdoomId, name: name, phone: phone, dob: dob
+                    id: currentEditMakhdoomId, name: name, phone: phone, dob: dob, address: address
                 }, { merge: true });
 
                 window.closeModal('editMakhdoomModal');
@@ -756,6 +786,72 @@
             }
         };
 
+        // --- دالة تحميل النسخة الاحتياطية (Export) ---
+        window.exportData = () => {
+            const dataToExport = {
+                makhdooms: db.makhdooms,
+                attendance: db.attendance,
+                settings: db.settings
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", `backup_${currentMeetingId}_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        };
+
+        // --- دالة استرداد البيانات (Import) ---
+        window.importData = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            Swal.fire({
+                title: 'استرداد البيانات',
+                text: 'هل أنت متأكد؟ سيتم استبدال البيانات الحالية ببيانات الملف المرفوع.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                confirmButtonText: 'نعم، استرداد',
+                cancelButtonText: 'إلغاء'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        try {
+                            const importedData = JSON.parse(e.target.result);
+                            
+                            if (!importedData.makhdooms || !importedData.attendance || !importedData.settings) {
+                                throw new Error("الملف غير صالح");
+                            }
+
+                            Swal.fire({ title: 'جاري الاسترداد...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+                            await setDoc(doc(getCollectionPath('settings'), currentMeetingId), importedData.settings);
+
+                            for (let m of importedData.makhdooms) {
+                                await setDoc(doc(getCollectionPath(`makhdooms_${currentMeetingId}`), m.id), m);
+                            }
+
+                            for (let date in importedData.attendance) {
+                                await setDoc(doc(getCollectionPath(`attendance_${currentMeetingId}`), date), { presentIds: importedData.attendance[date] });
+                            }
+
+                            Swal.fire('تم الاسترداد', 'تم استعادة البيانات بنجاح', 'success');
+                            document.getElementById('importFileInput').value = '';
+                        } catch (error) {
+                            Swal.fire('خطأ', 'الملف غير صالح أو حدث خطأ أثناء الاسترداد', 'error');
+                            document.getElementById('importFileInput').value = '';
+                        }
+                    };
+                    reader.readAsText(file);
+                } else {
+                    document.getElementById('importFileInput').value = '';
+                }
+            });
+        };
+
         window.renderAttendanceList = () => {
             const date = document.getElementById('meetingDate').value;
             const search = document.getElementById('searchInput').value.trim().toLowerCase();
@@ -770,7 +866,7 @@
             countDisplay.innerText = validPresentCount;
 
             const filtered = db.makhdooms.filter(m => 
-                m.name.toLowerCase().includes(search) || m.phone.includes(search)
+                m.name.toLowerCase().includes(search) || m.phone.includes(search) || (m.address && m.address.toLowerCase().includes(search))
             );
 
             if (filtered.length === 0) {
@@ -797,6 +893,9 @@
                     let count = 0;
                     for (let d in db.attendance) if (db.attendance[d].includes(m.id)) count++;
                     
+                    // إظهار العنوان تحت الاسم إذا كان موجوداً
+                    const addressHtml = m.address ? `<div class="text-sm text-gray-500 font-semibold mt-1"><i class="fa-solid fa-location-dot ml-1 text-gray-400"></i>${m.address}</div>` : '';
+
                     const row = document.createElement('tr');
                     row.className = `${rowHover} transition duration-200 ${isPresent ? 'bg-green-50/40' : ''}`;
                     row.innerHTML = `
@@ -806,7 +905,10 @@
                                 <label for="toggle-${m.id}" class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer"></label>
                             </div>
                         </td>
-                        <td class="py-4 px-6 border-b border-gray-50 font-black text-gray-800 text-lg whitespace-nowrap">${m.name}</td>
+                        <td class="py-4 px-6 border-b border-gray-50 whitespace-nowrap">
+                            <div class="font-black text-gray-800 text-lg">${m.name}</div>
+                            ${addressHtml}
+                        </td>
                         <td class="py-4 px-6 border-b border-gray-50 text-center whitespace-nowrap">
                             <button onclick="window.showMakhdoomHistory('${m.id}', '${m.name.replace(/'/g, "\\'")}')" class="${btnBg} px-4 py-1.5 rounded-lg font-bold text-sm transition shadow-sm border">
                                 ${count} مرات
